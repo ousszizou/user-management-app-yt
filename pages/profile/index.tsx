@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@lib/contexts/auth";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   console.log("user ", user);
   return (
@@ -89,7 +89,7 @@ const Profile = () => {
           </Flex>
         </Box>
         <Box p={6}>
-          <Button colorScheme="red" mb="16">
+          <Button colorScheme="red" mb="16" onClick={signOut}>
             Logout
           </Button>
         </Box>
