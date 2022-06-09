@@ -70,6 +70,7 @@ const Profile = () => {
       }
       if (data) {
         setFullName(data.full_name);
+        setAvatarUrl(data.avatar_url);
       }
     }
   };
@@ -100,6 +101,52 @@ const Profile = () => {
     setIswantUpdateFullName(false);
   };
 
+  const updateAvatarUrl = async (url: string) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: url })
+      .eq("id", user?.id);
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+    toast({
+      title: "Avatar url updated",
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+    });
+  };
+
+  const uploadAvatar = async (event: any) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      throw new Error("You must select an image to upload.");
+    }
+
+    setUploading(true);
+    const file = event.target.files[0];
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${user?.email}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      setUploading(false);
+      throw uploadError;
+    }
+
+    updateAvatarUrl(filePath);
+    setAvatarUrl(filePath);
+    setUploading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
     setEmail(user.email!);
@@ -119,7 +166,13 @@ const Profile = () => {
     >
       <Box maxW="2xl">
         <Box p="6" display="inline-block">
-          <Avatar rounded={"md"} size={"2xl"} src={avatarUrl} name={fullName} />
+          <Avatar
+            rounded="md"
+            borderRadius="md"
+            size={"2xl"}
+            name={fullName}
+            src={`https://lyiwefrqbflphqzwpeqm.supabase.co/storage/v1/object/public/avatars/${avatarUrl}`}
+          />
           <FormControl mt={2}>
             <FormLabel
               htmlFor="avatar"
@@ -139,6 +192,7 @@ const Profile = () => {
               type="file"
               id="avatar"
               accept="image/*"
+              onChange={(e) => uploadAvatar(e)}
               disabled={uploading}
             />
           </FormControl>
@@ -153,6 +207,7 @@ const Profile = () => {
           </Text>
           <Flex align={"center"} justify="space-between">
             <Input
+              isDisabled={!isWantUpdateEmail}
               p={4}
               borderRadius={10}
               bg={"whiteAlpha.50"}
@@ -206,7 +261,10 @@ const Profile = () => {
                     save
                   </Button>
                   <Button
-                    onClick={(e) => setIswantUpdateEmail(false)}
+                    onClick={(e) => {
+                      setIswantUpdateEmail(false);
+                      setEmail(user?.email!);
+                    }}
                     borderRadius={10}
                     bg="white"
                     color="gray.800"
