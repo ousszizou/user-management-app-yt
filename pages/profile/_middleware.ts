@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import jwt from "@tsndr/cloudflare-worker-jwt";
 
-const JWT_SECRET_KEY = "cc716f1a-c6fd-45f9-a7f1-f23ef1241bca";
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const ROUTE_AUTH = "/login";
 const SUPA_TOKEN = "sb-access-token";
 
@@ -11,8 +11,7 @@ const SUPA_TOKEN = "sb-access-token";
  */
 export async function middleware(req: NextRequest) {
   const token = req.cookies[SUPA_TOKEN];
-
-  if (!token || !(await jwt.verify(token, JWT_SECRET_KEY))) {
+  if (!token || !(await jwt.verify(token, JWT_SECRET_KEY as string))) {
     const url = req.nextUrl.clone();
     url.pathname = ROUTE_AUTH;
     return NextResponse.redirect(url, 302);
